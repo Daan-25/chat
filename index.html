@@ -24,17 +24,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Bericht versturen
-        function sendMessage() {
-            let msg = document.getElementById("message").value;
-            if (msg.trim() === "") return;
-            addDoc(collection(db, "chat"), {
-                text: msg,
-                timestamp: serverTimestamp()
-            });
-            document.getElementById("message").value = "";
-        }
-
         // Berichten weergeven
         const q = query(collection(db, "chat"), orderBy("timestamp"));
         onSnapshot(q, (snapshot) => {
@@ -59,6 +48,29 @@
     <h2>Realtime Chat</h2>
     <div id="chat-box"></div>
     <input type="text" id="message" placeholder="Typ een bericht...">
-    <button onclick="sendMessage()">Verstuur</button>
+    <button id="sendBtn">Verstuur</button>
+
+    <!-- Script zonder type="module" voor de sendMessage functie -->
+    <script>
+        // Functie om een bericht te versturen
+        function sendMessage() {
+            let msg = document.getElementById("message").value;
+            if (msg.trim() === "") return;
+
+            // Voeg het bericht toe aan Firestore
+            const db = getFirestore();
+            addDoc(collection(db, "chat"), {
+                text: msg,
+                timestamp: serverTimestamp()
+            });
+            document.getElementById("message").value = "";
+        }
+
+        // Event listener voor de knop om het bericht te versturen
+        document.getElementById("sendBtn").addEventListener("click", function() {
+            sendMessage();
+        });
+    </script>
+
 </body>
 </html>
