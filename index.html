@@ -4,53 +4,100 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Realtime Chat</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
     <style>
         body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f0f0;
             margin: 0;
-            background-color: black;
-            color: white;
-            font-family: Arial, sans-serif;
-            text-align: center;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
-        #chatContainer {
-            width: 80%;
-            margin: 0 auto;
+
+        .chat-container {
+            background-color: white;
+            width: 400px;
+            height: 500px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
-        #messages {
-            max-height: 400px;
-            overflow-y: auto;
-            margin-bottom: 20px;
+
+        .messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: scroll;
+            background-color: #f9f9f9;
         }
-        input, button {
+
+        .message {
+            margin-bottom: 10px;
             padding: 10px;
+            border-radius: 5px;
+            background-color: #e1e1e1;
+            word-wrap: break-word;
+        }
+
+        .message.user {
+            background-color: #007bff;
+            color: white;
+            text-align: right;
+        }
+
+        .message.bot {
+            background-color: #e7e7e7;
+            color: #333;
+            text-align: left;
+        }
+
+        .input-container {
+            display: flex;
+            border-top: 1px solid #ddd;
+        }
+
+        .input-container input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 0;
             font-size: 16px;
+            outline: none;
         }
-        input {
-            width: 70%;
-            margin-right: 10px;
-        }
-        button {
+
+        .input-container button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
             cursor: pointer;
+            font-size: 16px;
+            border-radius: 0 0 0 8px;
+        }
+
+        .input-container button:hover {
+            background-color: #0056b3;
         }
     </style>
 </head>
 <body>
 
-    <h1>Realtime Chat</h1>
-
-    <div id="chatContainer">
-        <div id="messages"></div>
-        <input type="text" id="messageInput" placeholder="Type your message...">
-        <button id="sendButton">Send</button>
+    <div class="chat-container">
+        <div class="messages" id="messages"></div>
+        <div class="input-container">
+            <input type="text" id="messageInput" placeholder="Typ een bericht...">
+            <button onclick="sendMessage()">Verstuur</button>
+        </div>
     </div>
 
-    <!-- Firebase and Firestore SDK -->
-    <script type="module">
-        // Import Firebase SDK
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.18.0/firebase-app.js';
-        import { getFirestore, collection, addDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/9.18.0/firebase-firestore.js';
-
-        // Firebase config
+    <script>
+        // Firebase-configuratie
         const firebaseConfig = {
             apiKey: "AIzaSyB0i0QCQPCWBjO12s1MNEVfrK7jdK1s1iY",
             authDomain: "logb-6a52c.firebaseapp.com",
@@ -61,51 +108,60 @@
             measurementId: "G-VZEER9WKMV"
         };
 
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        // Firebase initialisatie
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore(app);
 
-        // Function to send a message
-        async function sendMessage() {
-            const messageInput = document.getElementById('messageInput');
+        // Elementen
+        const messagesDiv = document.getElementById("messages");
+        const messageInput = document.getElementById("messageInput");
+
+        // Functie om berichten weer te geven
+        function displayMessage(message, sender) {
+            const messageDiv = document.createElement("div");
+            messageDiv.classList.add("message", sender);
+            messageDiv.textContent = message;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight; // Scroll naar beneden
+        }
+
+        // Functie om een bericht te versturen
+        function sendMessage() {
             const message = messageInput.value;
-            if (message) {
-                try {
-                    await addDoc(collection(db, "messages"), {
-                        text: message,
-                        timestamp: new Date()
+            if (message.trim()) {
+                // Toon het bericht van de gebruiker
+                displayMessage(message, "user");
+                messageInput.value = "";
+
+                // Voeg het bericht toe aan Firestore
+                db.collection("messages").add({
+                    text: message,
+                    sender: "user",
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Simuleer een bericht van de bot
+                setTimeout(() => {
+                    const botReply = "Bot zegt: " + message;
+                    displayMessage(botReply, "bot");
+
+                    // Voeg het bot-bericht toe aan Firestore
+                    db.collection("messages").add({
+                        text: botReply,
+                        sender: "bot",
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     });
-                    messageInput.value = '';  // Clear the input field
-                } catch (e) {
-                    console.error("Error adding document: ", e);
-                }
+                }, 1000); // Simuleer een antwoord na 1 seconde
             }
         }
 
-        // Function to display messages
-        function displayMessages(messages) {
-            const messagesContainer = document.getElementById('messages');
-            messagesContainer.innerHTML = ''; // Clear previous messages
-
-            messages.forEach(msg => {
-                const messageElement = document.createElement('div');
-                messageElement.textContent = msg.text;
-                messagesContainer.appendChild(messageElement);
+        // Voeg berichten toe die eerder zijn opgeslagen
+        db.collection("messages").orderBy("timestamp", "asc").onSnapshot(snapshot => {
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                displayMessage(data.text, data.sender);
             });
-        }
-
-        // Listen for real-time updates from Firestore
-        const unsubscribe = onSnapshot(collection(db, "messages"), (querySnapshot) => {
-            const messages = [];
-            querySnapshot.forEach((doc) => {
-                messages.push(doc.data());
-            });
-            displayMessages(messages);
         });
-
-        // Add event listener for the Send button
-        document.getElementById('sendButton').addEventListener('click', sendMessage);
-
     </script>
 
 </body>
