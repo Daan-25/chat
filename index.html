@@ -4,8 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Realtime Chat</title>
-    <script type="module">
-        // Firebase config (vervang dit met jouw Firebase-config!)
+    <script src="https://www.gstatic.com/firebasejs/9.18.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.18.0/firebase-firestore.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+        #messages {
+            margin-bottom: 20px;
+        }
+        #sendButton {
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Realtime Chat</h1>
+    <div id="messages"></div>
+    <input type="text" id="messageInput" placeholder="Typ een bericht...">
+    <button id="sendButton">Verstuur</button>
+
+    <script>
+        // Firebase-configuratie
         const firebaseConfig = {
             apiKey: "AIzaSyB0i0QCQPCWBjO12s1MNEVfrK7jdK1s1iY",
             authDomain: "logb-6a52c.firebaseapp.com",
@@ -16,62 +42,29 @@
             measurementId: "G-VZEER9WKMV"
         };
 
-        // Import Firebase modules
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js';
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js';
-
-        // Init Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // Berichten weergeven
-        const q = query(collection(db, "chat"), orderBy("timestamp"));
-        onSnapshot(q, (snapshot) => {
-            let chatBox = document.getElementById("chat-box");
-            chatBox.innerHTML = "";
-            snapshot.forEach(doc => {
-                let msg = document.createElement("div");
-                msg.textContent = doc.data().text;
-                chatBox.appendChild(msg);
-            });
-            chatBox.scrollTop = chatBox.scrollHeight;
-        });
-    </script>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; }
-        #chat-box { width: 300px; height: 400px; border: 1px solid #ccc; overflow-y: scroll; margin: 10px auto; padding: 10px; }
-        input { width: 80%; padding: 5px; }
-        button { padding: 5px; }
-    </style>
-</head>
-<body>
-    <h2>Realtime Chat</h2>
-    <div id="chat-box"></div>
-    <input type="text" id="message" placeholder="Typ een bericht...">
-    <button id="sendBtn">Verstuur</button>
-
-    <!-- Script zonder type="module" voor de sendMessage functie -->
-    <script>
-        // Zorg ervoor dat Firebase functies beschikbaar zijn in deze scope
+        // Initialiseer Firebase
+        const app = firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Functie om een bericht te versturen
-        function sendMessage() {
-            let msg = document.getElementById("message").value;
-            if (msg.trim() === "") return;
-
-            // Voeg het bericht toe aan Firestore
-            addDoc(collection(db, "chat"), {
-                text: msg,
-                timestamp: serverTimestamp()
-            });
-            document.getElementById("message").value = "";
-        }
-
-        // Event listener voor de knop om het bericht te versturen
-        document.getElementById("sendBtn").addEventListener("click", function() {
-            sendMessage();
+        // Verstuur bericht naar Firestore
+        document.getElementById('sendButton').addEventListener('click', function() {
+            const message = document.getElementById('messageInput').value;
+            sendMessage(message);
         });
+
+        function sendMessage(message) {
+            db.collection('chat').add({
+                text: message,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            })
+            .then(() => {
+                console.log("Bericht verstuurd!");
+                document.getElementById('messageInput').value = '';  // leeg het invoerveld
+            })
+            .catch(error => {
+                console.error("Fout bij het versturen van bericht: ", error);
+            });
+        }
     </script>
 
 </body>
