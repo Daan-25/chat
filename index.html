@@ -1,1 +1,42 @@
-test1
+<script type="module">
+  // Firebase importeren
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  // Jouw Firebase-configuratie
+  const firebaseConfig = {
+  apiKey: "AIzaSyB0i0QCQPCWBjO12s1MNEVfrK7jdK1s1iY",
+  authDomain: "logb-6a52c.firebaseapp.com",
+  projectId: "logb-6a52c",
+  storageBucket: "logb-6a52c.firebasestorage.app",
+  messagingSenderId: "864251143279",
+  appId: "1:864251143279:web:d1f7c9f8652f13e6ded99a",
+  measurementId: "G-VZEER9WKMV"
+};
+
+  // Firebase initialiseren
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // **Data opslaan in Firestore**
+  async function saveData() {
+    await setDoc(doc(db, "users", "daan"), {
+      naam: "Daan",
+      score: 100
+    });
+    console.log("Data opgeslagen!");
+  }
+
+  // **Data ophalen uit Firestore**
+  async function getData() {
+    const docSnap = await getDoc(doc(db, "users", "daan"));
+    if (docSnap.exists()) {
+      console.log("Data:", docSnap.data());
+    } else {
+      console.log("Geen data gevonden.");
+    }
+  }
+
+  saveData();  // Roep deze functie aan om iets op te slaan
+  getData();   // Roep deze functie aan om iets op te halen
+</script>
