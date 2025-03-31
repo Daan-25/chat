@@ -4,8 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Realtime Chat</title>
-    <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js"></script>
+    <script type="module">
+        // Firebase config (vervang dit met jouw Firebase-config!)
+        const firebaseConfig = {
+            apiKey: "AIzaSyB0i0QCQPCWBjO12s1MNEVfrK7jdK1s1iY",
+            authDomain: "logb-6a52c.firebaseapp.com",
+            projectId: "logb-6a52c",
+            storageBucket: "logb-6a52c.firebasestorage.app",
+            messagingSenderId: "864251143279",
+            appId: "1:864251143279:web:d1f7c9f8652f13e6ded99a",
+            measurementId: "G-VZEER9WKMV"
+        };
+
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js';
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js';
+
+        // Init Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Bericht versturen
+        function sendMessage() {
+            let msg = document.getElementById("message").value;
+            if (msg.trim() === "") return;
+            addDoc(collection(db, "chat"), {
+                text: msg,
+                timestamp: serverTimestamp()
+            });
+            document.getElementById("message").value = "";
+        }
+
+        // Berichten weergeven
+        const q = query(collection(db, "chat"), orderBy("timestamp"));
+        onSnapshot(q, (snapshot) => {
+            let chatBox = document.getElementById("chat-box");
+            chatBox.innerHTML = "";
+            snapshot.forEach(doc => {
+                let msg = document.createElement("div");
+                msg.textContent = doc.data().text;
+                chatBox.appendChild(msg);
+            });
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+    </script>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; }
         #chat-box { width: 300px; height: 400px; border: 1px solid #ccc; overflow-y: scroll; margin: 10px auto; padding: 10px; }
@@ -18,45 +60,5 @@
     <div id="chat-box"></div>
     <input type="text" id="message" placeholder="Typ een bericht...">
     <button onclick="sendMessage()">Verstuur</button>
-    
-    <script>
-        // Firebase config (vervang dit met jouw Firebase-config!)
-        const firebaseConfig = {
-            apiKey: "AIzaSyB0i0QCQPCWBjO12s1MNEVfrK7jdK1s1iY",
-            authDomain: "logb-6a52c.firebaseapp.com",
-            projectId: "logb-6a52c",
-            storageBucket: "logb-6a52c.firebasestorage.app",
-            messagingSenderId: "864251143279",
-            appId: "1:864251143279:web:d1f7c9f8652f13e6ded99a",
-            measurementId: "G-VZEER9WKMV"
-        };
-
-        // Init Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-
-        // Bericht versturen
-        function sendMessage() {
-            let msg = document.getElementById("message").value;
-            if (msg.trim() === "") return;
-            db.collection("chat").add({
-                text: msg,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            document.getElementById("message").value = "";
-        }
-
-        // Berichten weergeven
-        db.collection("chat").orderBy("timestamp").onSnapshot(snapshot => {
-            let chatBox = document.getElementById("chat-box");
-            chatBox.innerHTML = "";
-            snapshot.forEach(doc => {
-                let msg = document.createElement("div");
-                msg.textContent = doc.data().text;
-                chatBox.appendChild(msg);
-            });
-            chatBox.scrollTop = chatBox.scrollHeight;
-        });
-    </script>
 </body>
 </html>
