@@ -1,10 +1,27 @@
-<script type="module">
-  // Firebase importeren
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-  // Jouw Firebase-configuratie
-  const firebaseConfig = {
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realtime Chat</title>
+    <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        #chat-box { width: 300px; height: 400px; border: 1px solid #ccc; overflow-y: scroll; margin: 10px auto; padding: 10px; }
+        input { width: 80%; padding: 5px; }
+        button { padding: 5px; }
+    </style>
+</head>
+<body>
+    <h2>Realtime Chat</h2>
+    <div id="chat-box"></div>
+    <input type="text" id="message" placeholder="Typ een bericht...">
+    <button onclick="sendMessage()">Verstuur</button>
+    
+    <script>
+        // Firebase config (vervang dit met jouw Firebase-config!)
+        const firebaseConfig = {
   apiKey: "AIzaSyB0i0QCQPCWBjO12s1MNEVfrK7jdK1s1iY",
   authDomain: "logb-6a52c.firebaseapp.com",
   projectId: "logb-6a52c",
@@ -13,30 +30,33 @@
   appId: "1:864251143279:web:d1f7c9f8652f13e6ded99a",
   measurementId: "G-VZEER9WKMV"
 };
+        
+        // Init Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
-  // Firebase initialiseren
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+        // Bericht versturen
+        function sendMessage() {
+            let msg = document.getElementById("message").value;
+            if (msg.trim() === "") return;
+            db.collection("chat").add({
+                text: msg,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            document.getElementById("message").value = "";
+        }
 
-  // **Data opslaan in Firestore**
-  async function saveData() {
-    await setDoc(doc(db, "users", "daan"), {
-      naam: "Daan",
-      score: 100
-    });
-    console.log("Data opgeslagen!");
-  }
-
-  // **Data ophalen uit Firestore**
-  async function getData() {
-    const docSnap = await getDoc(doc(db, "users", "daan"));
-    if (docSnap.exists()) {
-      console.log("Data:", docSnap.data());
-    } else {
-      console.log("Geen data gevonden.");
-    }
-  }
-
-  saveData();  // Roep deze functie aan om iets op te slaan
-  getData();   // Roep deze functie aan om iets op te halen
-</script>
+        // Berichten weergeven
+        db.collection("chat").orderBy("timestamp").onSnapshot(snapshot => {
+            let chatBox = document.getElementById("chat-box");
+            chatBox.innerHTML = "";
+            snapshot.forEach(doc => {
+                let msg = document.createElement("div");
+                msg.textContent = doc.data().text;
+                chatBox.appendChild(msg);
+            });
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+    </script>
+</body>
+</html>
