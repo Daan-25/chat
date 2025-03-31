@@ -52,13 +52,15 @@
 
     <!-- Script zonder type="module" voor de sendMessage functie -->
     <script>
+        // Zorg ervoor dat Firebase functies beschikbaar zijn in deze scope
+        const db = firebase.firestore();
+
         // Functie om een bericht te versturen
         function sendMessage() {
             let msg = document.getElementById("message").value;
             if (msg.trim() === "") return;
 
             // Voeg het bericht toe aan Firestore
-            const db = getFirestore();
             addDoc(collection(db, "chat"), {
                 text: msg,
                 timestamp: serverTimestamp()
