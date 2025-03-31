@@ -4,21 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Realtime Chat</title>
-    <script src="https://www.gstatic.com/firebasejs/9.18.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.18.0/firebase-firestore.js"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
             margin: 0;
-            padding: 20px;
+            background-color: black;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        #chatContainer {
+            width: 80%;
+            margin: 0 auto;
         }
         #messages {
+            max-height: 400px;
+            overflow-y: auto;
             margin-bottom: 20px;
         }
-        #sendButton {
+        input, button {
             padding: 10px;
             font-size: 16px;
+        }
+        input {
+            width: 70%;
+            margin-right: 10px;
+        }
+        button {
             cursor: pointer;
         }
     </style>
@@ -26,12 +37,20 @@
 <body>
 
     <h1>Realtime Chat</h1>
-    <div id="messages"></div>
-    <input type="text" id="messageInput" placeholder="Typ een bericht...">
-    <button id="sendButton">Verstuur</button>
 
-    <script>
-        // Firebase-configuratie
+    <div id="chatContainer">
+        <div id="messages"></div>
+        <input type="text" id="messageInput" placeholder="Type your message...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <!-- Firebase and Firestore SDK -->
+    <script type="module">
+        // Import Firebase SDK
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.18.0/firebase-app.js';
+        import { getFirestore, collection, addDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/9.18.0/firebase-firestore.js';
+
+        // Firebase config
         const firebaseConfig = {
             apiKey: "AIzaSyB0i0QCQPCWBjO12s1MNEVfrK7jdK1s1iY",
             authDomain: "logb-6a52c.firebaseapp.com",
@@ -42,29 +61,48 @@
             measurementId: "G-VZEER9WKMV"
         };
 
-        // Initialiseer Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-        // Verstuur bericht naar Firestore
-        document.getElementById('sendButton').addEventListener('click', function() {
-            const message = document.getElementById('messageInput').value;
-            sendMessage(message);
-        });
+        // Function to send a message
+        async function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value;
+            if (message) {
+                try {
+                    await addDoc(collection(db, "messages"), {
+                        text: message,
+                        timestamp: new Date()
+                    });
+                    messageInput.value = '';  // Clear the input field
+                } catch (e) {
+                    console.error("Error adding document: ", e);
+                }
+            }
+        }
 
-        function sendMessage(message) {
-            db.collection('chat').add({
-                text: message,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            })
-            .then(() => {
-                console.log("Bericht verstuurd!");
-                document.getElementById('messageInput').value = '';  // leeg het invoerveld
-            })
-            .catch(error => {
-                console.error("Fout bij het versturen van bericht: ", error);
+        // Function to display messages
+        function displayMessages(messages) {
+            const messagesContainer = document.getElementById('messages');
+            messagesContainer.innerHTML = ''; // Clear previous messages
+
+            messages.forEach(msg => {
+                const messageElement = document.createElement('div');
+                messageElement.textContent = msg.text;
+                messagesContainer.appendChild(messageElement);
             });
         }
+
+        // Listen for real-time updates from Firestore
+        const unsubscribe = onSnapshot(collection(db, "messages"), (querySnapshot) => {
+            const messages = [];
+            querySnapshot.forEach((doc) => {
+                messages.push(doc.data());
+            });
+            displayMessages(messages);
+        });
+
     </script>
 
 </body>
