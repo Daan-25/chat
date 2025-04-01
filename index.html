@@ -43,18 +43,55 @@
     </div>
 
     <script>
-        const backendUrl = 'https://chat-backend-khaki.vercel.app/api/messages';
+        const backendUrl = 'https://backchat-silk.vercel.app/api/messages';
 
-        // Test de backend
-        fetch(backendUrl)
-            .then(response => response.json())
-            .then(data => {
-                const messagesContainer = document.getElementById('messages');
-                messagesContainer.textContent = data.message; // Toont "Hallo vanaf je backend!"
-            })
-            .catch(error => console.error('Fout:', error));
+        // Functie om berichten te tonen
+        function displayMessages(messages) {
+            const messagesContainer = document.getElementById('messages');
+            messagesContainer.innerHTML = '';
+            messages.forEach(msg => {
+                const messageElement = document.createElement('div');
+                messageElement.textContent = msg.text;
+                messagesContainer.appendChild(messageElement);
+            });
+        }
 
-        // Later voegen we hier de echte chatfunctionaliteit toe
+        // Haal berichten op
+        async function fetchMessages() {
+            try {
+                const response = await fetch(backendUrl);
+                const messages = await response.json();
+                displayMessages(messages);
+            } catch (error) {
+                console.error('Fout bij ophalen:', error);
+            }
+        }
+
+        // Verstuur een bericht
+        async function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const text = messageInput.value;
+            if (text) {
+                try {
+                    await fetch(backendUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text }),
+                    });
+                    messageInput.value = ''; // Wis het invoerveld
+                    fetchMessages(); // Vernieuw de berichten
+                } catch (error) {
+                    console.error('Fout bij verzenden:', error);
+                }
+            }
+        }
+
+        // Poll elke 2 seconden voor updates
+        setInterval(fetchMessages, 2000);
+        fetchMessages(); // Haal bij laden op
+
+        // Koppel de verzendknop
+        document.getElementById('sendButton').addEventListener('click', sendMessage);
     </script>
 </body>
 </html>
