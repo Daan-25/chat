@@ -57,6 +57,14 @@
             color: #f00;
             margin-top: 10px;
         }
+        #charCount {
+            font-size: 0.9em;
+            color: #888;
+            margin-right: 10px;
+        }
+        #charCount.warning {
+            color: #f00;
+        }
     </style>
 </head>
 <body>
@@ -64,7 +72,8 @@
     <div id="chatContainer">
         <div id="messages"></div>
         <input type="text" id="usernameInput" placeholder="Jouw naam">
-        <input type="text" id="messageInput" placeholder="Type je bericht...">
+        <input type="text" id="messageInput" placeholder="Type je bericht..." maxlength="100">
+        <span id="charCount">0/100</span>
         <button id="sendButton">Send</button>
         <div id="statusMessage"></div>
     </div>
@@ -72,6 +81,16 @@
     <script>
         const backendUrl = 'https://backchat-silk.vercel.app/api/messages';
         const statusMessage = document.getElementById('statusMessage');
+        const messageInput = document.getElementById('messageInput');
+        const charCount = document.getElementById('charCount');
+        const MAX_MESSAGE_LENGTH = 100;
+
+        // Update tekenteller
+        messageInput.addEventListener('input', () => {
+            const length = messageInput.value.length;
+            charCount.textContent = `${length}/${MAX_MESSAGE_LENGTH}`;
+            charCount.classList.toggle('warning', length > MAX_MESSAGE_LENGTH);
+        });
 
         // Functie om berichten te tonen
         function displayMessages(messages) {
@@ -103,30 +122,38 @@
 
         // Verstuur een bericht
         async function sendMessage() {
-            const messageInput = document.getElementById('messageInput');
             const usernameInput = document.getElementById('usernameInput');
             const text = messageInput.value;
             const username = usernameInput.value;
-            if (text) {
-                try {
-                    const response = await fetch(backendUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ text, username }),
-                    });
-                    const result = await response.json();
-                    if (!response.ok) {
-                        statusMessage.textContent = result.error;
-                        setTimeout(() => statusMessage.textContent = '', 5000); // Verberg na 5 sec
-                        return;
-                    }
-                    messageInput.value = '';
-                    fetchMessages();
-                    statusMessage.textContent = '';
-                } catch (error) {
-                    console.error('Fout bij verzenden:', error);
-                    statusMessage.textContent = 'Verbinding mislukt. Probeer het later.';
+            if (!text) {
+                statusMessage.textContent = 'Geen tekst opgegeven';
+                setTimeout(() => statusMessage.textContent = '', 5000);
+                return;
+            }
+            if (text.length > MAX_MESSAGE_LENGTH) {
+                statusMessage.textContent = `Bericht te lang (max ${MAX_MESSAGE_LENGTH} tekens)`;
+                setTimeout(() => statusMessage.textContent = '', 5000);
+                return;
+            }
+            try {
+                const response = await fetch(backendUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text, username }),
+                });
+                const result = await response.json();
+                if (!response.ok) {
+                    statusMessage.textContent = result.error;
+                    setTimeout(() => statusMessage.textContent = '', 5000);
+                    return;
                 }
+                messageInput.value = '';
+                charCount.textContent = `0/${MAX_MESSAGE_LENGTH}`;
+                fetchMessages();
+                statusMessage.textContent = '';
+            } catch (error) {
+                console.error('Fout bij verzenden:', error);
+                statusMessage.textContent = 'Verbinding mislukt. Probeer het later.';
             }
         }
 
