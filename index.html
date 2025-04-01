@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Realtime Chat met Supabase</title>
+    <title>Realtime Chat</title>
     <style>
         body {
             margin: 0;
@@ -44,69 +45,68 @@
         <button id="sendButton">Send</button>
     </div>
 
-    <!-- Supabase client library -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0/dist/umd/supabase.js"></script>
+    <!-- Firebase and Firestore SDK -->
+    <script type="module">
+        // Import Firebase SDK
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.18.0/firebase-app.js';
+        import { getFirestore, collection, addDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/9.18.0/firebase-firestore.js';
 
-    <script>
-        // Supabase URL en sleutel
-        const supabaseUrl = 'https://wdsqdjxkdsyzguadrdod.supabase.co';  // Vul hier je Supabase URL in
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indkc3FkanhrZHN5emd1YWRyZG9kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM1MDA2NjMsImV4cCI6MjA1OTA3NjY2M30.dFtpz7z-1-VWChe8hUmrYRTUlr4qyLgLl_PT_5YaPGc';  // Vul hier je anon key in
+        // Firebase config
+        const firebaseConfig = {
+  apiKey: "AIzaSyCYd5lutRiZ1734OFAVo-czdgoaSCS9Kxw",
+  authDomain: "chat-9d54c.firebaseapp.com",
+  projectId: "chat-9d54c",
+  storageBucket: "chat-9d54c.firebasestorage.app",
+  messagingSenderId: "748564389415",
+  appId: "1:748564389415:web:e9aa4acd76e23eb883f802",
+  measurementId: "G-9B20YEVG7K"
+};
 
-        // Supabase client initialiseren
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-        // Functie om een bericht te verzenden
+        // Function to send a message
         async function sendMessage() {
             const messageInput = document.getElementById('messageInput');
             const message = messageInput.value;
             if (message) {
-                const { data, error } = await supabase
-                    .from('messages')  // Zorg ervoor dat je deze tabel hebt in je Supabase-database
-                    .insert([{ text: message }]);
-
-                if (error) {
-                    console.error('Fout bij het toevoegen van bericht:', error);
-                } else {
-                    messageInput.value = '';  // Velden leegmaken
+                try {
+                    await addDoc(collection(db, "messages"), {
+                        text: message,
+                        timestamp: new Date()
+                    });
+                    messageInput.value = '';  // Clear the input field
+                } catch (e) {
+                    console.error("Error adding document: ", e);
                 }
             }
         }
 
-        // Functie om berichten weer te geven
-        async function displayMessages() {
-            const { data, error } = await supabase
-                .from('messages')
-                .select('*')
-                .order('created_at', { ascending: true });
+        // Function to display messages
+        function displayMessages(messages) {
+            const messagesContainer = document.getElementById('messages');
+            messagesContainer.innerHTML = ''; // Clear previous messages
 
-            if (error) {
-                console.error('Fout bij het ophalen van berichten:', error);
-            } else {
-                const messagesContainer = document.getElementById('messages');
-                messagesContainer.innerHTML = '';  // Vorige berichten wissen
-
-                data.forEach(msg => {
-                    const messageElement = document.createElement('div');
-                    messageElement.textContent = msg.text;
-                    messagesContainer.appendChild(messageElement);
-                });
-            }
+            messages.forEach(msg => {
+                const messageElement = document.createElement('div');
+                messageElement.textContent = msg.text;
+                messagesContainer.appendChild(messageElement);
+            });
         }
 
-        // Real-time berichten ophalen
-        supabase
-            .from('messages')
-            .on('INSERT', payload => {
-                console.log('Nieuw bericht:', payload.new);
-                displayMessages();  // Herlaad de berichten
-            })
-            .subscribe();
+        // Listen for real-time updates from Firestore
+        const unsubscribe = onSnapshot(collection(db, "messages"), (querySnapshot) => {
+            const messages = [];
+            querySnapshot.forEach((doc) => {
+                messages.push(doc.data());
+            });
+            displayMessages(messages);
+        });
 
-        // Event listener voor de Verzenden-knop
+        // Add event listener for the Send button
         document.getElementById('sendButton').addEventListener('click', sendMessage);
 
-        // Toon berichten bij het laden van de pagina
-        displayMessages();
     </script>
 
 </body>
