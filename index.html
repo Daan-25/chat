@@ -34,6 +34,10 @@
             font-size: 0.8em;
             color: #888;
         }
+        .ip {
+            font-size: 0.8em;
+            color: #f00;
+        }
         input, button {
             padding: 10px;
             font-size: 16px;
@@ -49,6 +53,10 @@
         button {
             cursor: pointer;
         }
+        #statusMessage {
+            color: #f00;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -58,11 +66,14 @@
         <input type="text" id="usernameInput" placeholder="Jouw naam">
         <input type="text" id="messageInput" placeholder="Type je bericht...">
         <button id="sendButton">Send</button>
+        <div id="statusMessage"></div>
     </div>
 
     <script>
         const backendUrl = 'https://backchat-silk.vercel.app/api/messages';
+        const statusMessage = document.getElementById('statusMessage');
 
+        // Functie om berichten te tonen
         function displayMessages(messages) {
             const messagesContainer = document.getElementById('messages');
             messagesContainer.innerHTML = '';
@@ -72,12 +83,14 @@
                 messageElement.innerHTML = `
                     <span class="username">${msg.username}</span>: ${msg.text}
                     <span class="timestamp">(${new Date(msg.timestamp).toLocaleString()})</span>
+                    <span class="ip">[IP: ${msg.ip}]</span>
                 `;
                 messagesContainer.appendChild(messageElement);
             });
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
+        // Haal berichten op
         async function fetchMessages() {
             try {
                 const response = await fetch(backendUrl);
@@ -88,6 +101,7 @@
             }
         }
 
+        // Verstuur een bericht
         async function sendMessage() {
             const messageInput = document.getElementById('messageInput');
             const usernameInput = document.getElementById('usernameInput');
@@ -95,27 +109,33 @@
             const username = usernameInput.value;
             if (text) {
                 try {
-                    await fetch(backendUrl, {
+                    const response = await fetch(backendUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ text, username }),
                     });
+                    const result = await response.json();
+                    if (!response.ok) {
+                        statusMessage.textContent = result.error;
+                        setTimeout(() => statusMessage.textContent = '', 5000); // Verberg na 5 sec
+                        return;
+                    }
                     messageInput.value = '';
                     fetchMessages();
+                    statusMessage.textContent = '';
                 } catch (error) {
                     console.error('Fout bij verzenden:', error);
+                    statusMessage.textContent = 'Verbinding mislukt. Probeer het later.';
                 }
             }
         }
 
         // Poll elke 2 seconden voor updates
         setInterval(fetchMessages, 2000);
-        fetchMessages(); // Haal bij laden op
+        fetchMessages();
 
         // Koppel de verzendknop
         document.getElementById('sendButton').addEventListener('click', sendMessage);
-
-        // Verstuur met Enter-toets
         document.getElementById('messageInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
         });
