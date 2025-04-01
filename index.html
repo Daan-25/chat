@@ -14,19 +14,36 @@
         }
         #chatContainer {
             width: 80%;
-            margin: 0 auto;
+            margin: 20px auto;
         }
         #messages {
             max-height: 400px;
             overflow-y: auto;
             margin-bottom: 20px;
+            text-align: left;
+        }
+        .message {
+            padding: 5px;
+            border-bottom: 1px solid #333;
+        }
+        .username {
+            font-weight: bold;
+            color: #0f0;
+        }
+        .timestamp {
+            font-size: 0.8em;
+            color: #888;
         }
         input, button {
             padding: 10px;
             font-size: 16px;
         }
-        input {
-            width: 70%;
+        #usernameInput {
+            width: 20%;
+            margin-right: 10px;
+        }
+        #messageInput {
+            width: 50%;
             margin-right: 10px;
         }
         button {
@@ -38,25 +55,29 @@
     <h1>Realtime Chat</h1>
     <div id="chatContainer">
         <div id="messages"></div>
-        <input type="text" id="messageInput" placeholder="Type your message...">
+        <input type="text" id="usernameInput" placeholder="Jouw naam">
+        <input type="text" id="messageInput" placeholder="Type je bericht...">
         <button id="sendButton">Send</button>
     </div>
 
     <script>
         const backendUrl = 'https://backchat-silk.vercel.app/api/messages';
 
-        // Functie om berichten te tonen
         function displayMessages(messages) {
             const messagesContainer = document.getElementById('messages');
             messagesContainer.innerHTML = '';
             messages.forEach(msg => {
                 const messageElement = document.createElement('div');
-                messageElement.textContent = msg.text;
+                messageElement.className = 'message';
+                messageElement.innerHTML = `
+                    <span class="username">${msg.username}</span>: ${msg.text}
+                    <span class="timestamp">(${new Date(msg.timestamp).toLocaleString()})</span>
+                `;
                 messagesContainer.appendChild(messageElement);
             });
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
-        // Haal berichten op
         async function fetchMessages() {
             try {
                 const response = await fetch(backendUrl);
@@ -67,19 +88,20 @@
             }
         }
 
-        // Verstuur een bericht
         async function sendMessage() {
             const messageInput = document.getElementById('messageInput');
+            const usernameInput = document.getElementById('usernameInput');
             const text = messageInput.value;
+            const username = usernameInput.value;
             if (text) {
                 try {
                     await fetch(backendUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ text }),
+                        body: JSON.stringify({ text, username }),
                     });
-                    messageInput.value = ''; // Wis het invoerveld
-                    fetchMessages(); // Vernieuw de berichten
+                    messageInput.value = '';
+                    fetchMessages();
                 } catch (error) {
                     console.error('Fout bij verzenden:', error);
                 }
@@ -92,6 +114,11 @@
 
         // Koppel de verzendknop
         document.getElementById('sendButton').addEventListener('click', sendMessage);
+
+        // Verstuur met Enter-toets
+        document.getElementById('messageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
     </script>
 </body>
 </html>
