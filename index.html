@@ -9,7 +9,7 @@
             margin: 0;
             background: linear-gradient(135deg, #1a1a1a, #2b2b2b);
             color: #f2f2f2;
-            font-family: 'Courier New', monospace; /* Monospace voor een "techy" gevoel */
+            font-family: 'Courier New', monospace;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -18,7 +18,7 @@
         h1 {
             font-size: 2.5em;
             margin: 20px 0;
-            color: #f7931a; /* Bitcoin-oranje */
+            color: #f7931a;
             text-shadow: 0 2px 6px rgba(247, 147, 26, 0.5);
         }
         #chatContainer {
@@ -29,7 +29,7 @@
             box-shadow: 0 4px 20px rgba(247, 147, 26, 0.1);
             padding: 20px;
             margin: 0 auto 20px;
-            border: 1px solid #f7931a33; /* Subtiele oranje rand */
+            border: 1px solid #f7931a33;
         }
         #messages {
             max-height: 500px;
@@ -52,7 +52,7 @@
         .message:hover {
             background: #252525;
         }
-        .message::before { /* Subtiele Bitcoin "coin" decoratie */
+        .message::before {
             content: '₿';
             font-size: 0.8em;
             color: #f7931a;
@@ -61,7 +61,7 @@
         }
         .username {
             font-weight: bold;
-            color: #f7931a; /* Bitcoin-oranje */
+            color: #f7931a;
             margin-right: 8px;
         }
         .timestamp {
@@ -71,7 +71,7 @@
         }
         .ip {
             font-size: 0.85em;
-            color: #ff6f61; /* Zacht rood voor contrast */
+            color: #ff6f61;
             margin-left: 10px;
         }
         input, button {
@@ -96,14 +96,14 @@
             border: 1px solid #f7931a33;
         }
         button {
-            background: #f7931a; /* Bitcoin-oranje */
+            background: #f7931a;
             color: #1a1a1a;
             cursor: pointer;
             transition: background 0.3s;
             font-weight: bold;
         }
         button:hover {
-            background: #e07b10; /* Donkerder oranje bij hover */
+            background: #e07b10;
         }
         #statusMessage {
             color: #ff6f61;
@@ -177,10 +177,14 @@
         async function fetchMessages() {
             try {
                 const response = await fetch(backendUrl);
+                if (!response.ok) {
+                    throw new Error('Netwerkfout: ' + response.status);
+                }
                 const messages = await response.json();
                 displayMessages(messages);
             } catch (error) {
-                console.error('Fout bij ophalen:', error);
+                console.error('Fout bij ophalen berichten:', error);
+                statusMessage.textContent = 'Kan berichten niet laden. Controleer je verbinding.';
             }
         }
 
@@ -210,11 +214,11 @@
                 const response = await fetch(backendUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text, username bens }),
+                    body: JSON.stringify({ text, username }) // Typo "bens" verwijderd
                 });
                 const result = await response.json();
                 if (!response.ok) {
-                    statusMessage.textContent = result.error;
+                    statusMessage.textContent = result.error || 'Fout bij verzenden';
                     setTimeout(() => statusMessage.textContent = '', 5000);
                     return;
                 }
@@ -225,10 +229,11 @@
             } catch (error) {
                 console.error('Fout bij verzenden:', error);
                 statusMessage.textContent = 'Verbinding mislukt. Probeer het later.';
+                setTimeout(() => statusMessage.textContent = '', 5000);
             }
         }
 
-        // Poll elke 2 seconden voor updates
+        // Poll elke 2 seconden voorupdates
         setInterval(fetchMessages, 2000);
         fetchMessages();
 
