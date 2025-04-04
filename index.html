@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Realtime Chat</title>
+    <title>Chattie Chat</title>
     <style>
         body {
             margin: 0;
             background: linear-gradient(135deg, #1a1a1a, #2b2b2b);
-            color: #e0e0e0;
-            font-family: 'Segoe UI', Arial, sans-serif;
+            color: #f2f2f2;
+            font-family: 'Courier New', monospace; /* Monospace voor een "techy" gevoel */
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -18,41 +18,50 @@
         h1 {
             font-size: 2.5em;
             margin: 20px 0;
-            color: #00cc99;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            color: #f7931a; /* Bitcoin-oranje */
+            text-shadow: 0 2px 6px rgba(247, 147, 26, 0.5);
         }
         #chatContainer {
             width: 90%;
             max-width: 800px;
-            background: #252525;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            background: #212121;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(247, 147, 26, 0.1);
             padding: 20px;
             margin: 0 auto 20px;
+            border: 1px solid #f7931a33; /* Subtiele oranje rand */
         }
         #messages {
             max-height: 500px;
             overflow-y: auto;
             margin-bottom: 20px;
-            padding: 10px;
-            background: #1f1f1f;
-            border-radius: 10px;
+            padding: 15px;
+            background: #1a1a1a;
+            border-radius: 8px;
             border: 1px solid #333;
         }
         .message {
-            padding: 10px;
+            padding: 12px;
             border-bottom: 1px solid #3a3a3a;
             display: flex;
             flex-wrap: wrap;
             align-items: baseline;
             transition: background 0.2s;
+            position: relative;
         }
         .message:hover {
-            background: #2a2a2a;
+            background: #252525;
+        }
+        .message::before { /* Subtiele Bitcoin "coin" decoratie */
+            content: '₿';
+            font-size: 0.8em;
+            color: #f7931a;
+            opacity: 0.3;
+            margin-right: 8px;
         }
         .username {
             font-weight: bold;
-            color: #00cc99;
+            color: #f7931a; /* Bitcoin-oranje */
             margin-right: 8px;
         }
         .timestamp {
@@ -62,7 +71,7 @@
         }
         .ip {
             font-size: 0.85em;
-            color: #ff5555;
+            color: #ff6f61; /* Zacht rood voor contrast */
             margin-left: 10px;
         }
         input, button {
@@ -75,26 +84,29 @@
         #usernameInput {
             width: 150px;
             margin-right: 10px;
-            background: #333;
-            color: #e0e0e0;
+            background: #2b2b2b;
+            color: #f2f2f2;
+            border: 1px solid #f7931a33;
         }
         #messageInput {
             flex-grow: 1;
             margin-right: 10px;
-            background: #333;
-            color: #e0e0e0;
+            background: #2b2b2b;
+            color: #f2f2f2;
+            border: 1px solid #f7931a33;
         }
         button {
-            background: #00cc99;
-            color: white;
+            background: #f7931a; /* Bitcoin-oranje */
+            color: #1a1a1a;
             cursor: pointer;
             transition: background 0.3s;
+            font-weight: bold;
         }
         button:hover {
-            background: #00b386;
+            background: #e07b10; /* Donkerder oranje bij hover */
         }
         #statusMessage {
-            color: #ff5555;
+            color: #ff6f61;
             margin-top: 10px;
             font-size: 0.9em;
         }
@@ -104,7 +116,7 @@
             margin-right: 10px;
         }
         #charCount.warning {
-            color: #ff5555;
+            color: #ff6f61;
         }
         .input-container {
             display: flex;
@@ -114,7 +126,7 @@
     </style>
 </head>
 <body>
-    <h1>Realtime Chat</h1>
+    <h1>Chattie Chat</h1>
     <div id="chatContainer">
         <div id="messages"></div>
         <div class="input-container">
@@ -175,15 +187,15 @@
         // Verstuur een bericht
         async function sendMessage() {
             const usernameInput = document.getElementById('usernameInput');
-            const textA = messageInput.value;
+            const text = messageInput.value;
             const username = usernameInput.value;
             
-            if (!textA) {
+            if (!text) {
                 statusMessage.textContent = 'Geen tekst opgegeven';
                 setTimeout(() => statusMessage.textContent = '', 5000);
                 return;
             }
-            if (textA.length > MAX_MESSAGE_LENGTH) {
+            if (text.length > MAX_MESSAGE_LENGTH) {
                 statusMessage.textContent = `Bericht te lang (max ${MAX_MESSAGE_LENGTH} tekens)`;
                 setTimeout(() => statusMessage.textContent = '', 5000);
                 return;
@@ -198,7 +210,7 @@
                 const response = await fetch(backendUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: textA, username }),
+                    body: JSON.stringify({ text, username bens }),
                 });
                 const result = await response.json();
                 if (!response.ok) {
