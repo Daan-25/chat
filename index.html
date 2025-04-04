@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chattie Chat</title>
+    <title>Bitcoin Chat</title>
     <style>
         body {
             margin: 0;
@@ -45,7 +45,7 @@
             border-bottom: 1px solid #3a3a3a;
             display: flex;
             flex-wrap: wrap;
-            align-items: baseline;
+            align-items: center; /* Avatar en tekst op één lijn */
             transition: background 0.2s;
             position: relative;
         }
@@ -58,6 +58,10 @@
             color: #f7931a;
             opacity: 0.3;
             margin-right: 8px;
+        }
+        .avatar {
+            margin-right: 10px;
+            font-size: 1.5em; /* Voor emoji-avatars */
         }
         .username {
             font-weight: bold;
@@ -74,7 +78,7 @@
             color: #ff6f61;
             margin-left: 10px;
         }
-        input, button {
+        input, button, select {
             padding: 12px;
             font-size: 1em;
             border: none;
@@ -90,6 +94,12 @@
         }
         #messageInput {
             flex-grow: 1;
+            margin-right: 10px;
+            background: #2b2b2b;
+            color: #f2f2f2;
+            border: 1px solid #f7931a33;
+        }
+        #avatarSelect {
             margin-right: 10px;
             background: #2b2b2b;
             color: #f2f2f2;
@@ -126,11 +136,18 @@
     </style>
 </head>
 <body>
-    <h1>Chattie Chat</h1>
+    <h1>Bitcoin Chat</h1>
     <div id="chatContainer">
         <div id="messages"></div>
         <div class="input-container">
             <input type="text" id="usernameInput" placeholder="Jouw naam" maxlength="10">
+            <select id="avatarSelect">
+                <option value="😀">😀</option>
+                <option value="🚀">🚀</option>
+                <option value="🐱">🐱</option>
+                <option value="💰">💰</option>
+                <option value="🦁">🦁</option>
+            </select>
             <input type="text" id="messageInput" placeholder="Type je bericht..." maxlength="100">
             <span id="charCount">0/100</span>
             <button id="sendButton">Send</button>
@@ -162,6 +179,7 @@
                 const messageElement = document.createElement('div');
                 messageElement.className = 'message';
                 messageElement.innerHTML = `
+                    <span class="avatar">${msg.avatar || '😀'}</span>
                     <span class="username">${msg.username}</span>: ${msg.text}
                     <span class="timestamp">(${new Date(msg.timestamp).toLocaleString()})</span>
                     <span class="ip">[IP: ${msg.ip}]</span>
@@ -177,23 +195,23 @@
         async function fetchMessages() {
             try {
                 const response = await fetch(backendUrl);
-                if (!response.ok) {
-                    throw new Error('Netwerkfout: ' + response.status);
-                }
+                if (!response.ok) throw new Error('Netwerkfout');
                 const messages = await response.json();
                 displayMessages(messages);
             } catch (error) {
-                console.error('Fout bij ophalen berichten:', error);
-                statusMessage.textContent = 'Kan berichten niet laden. Controleer je verbinding.';
+                console.error('Fout bij ophalen:', error);
+                statusMessage.textContent = 'Kan berichten niet laden.';
             }
         }
 
         // Verstuur een bericht
         async function sendMessage() {
             const usernameInput = document.getElementById('usernameInput');
+            const avatarSelect = document.getElementById('avatarSelect');
             const text = messageInput.value;
             const username = usernameInput.value;
-            
+            const avatar = avatarSelect.value;
+
             if (!text) {
                 statusMessage.textContent = 'Geen tekst opgegeven';
                 setTimeout(() => statusMessage.textContent = '', 5000);
@@ -214,11 +232,11 @@
                 const response = await fetch(backendUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text, username }) // Typo "bens" verwijderd
+                    body: JSON.stringify({ text, username, avatar }),
                 });
                 const result = await response.json();
                 if (!response.ok) {
-                    statusMessage.textContent = result.error || 'Fout bij verzenden';
+                    statusMessage.textContent = result.error;
                     setTimeout(() => statusMessage.textContent = '', 5000);
                     return;
                 }
@@ -229,11 +247,10 @@
             } catch (error) {
                 console.error('Fout bij verzenden:', error);
                 statusMessage.textContent = 'Verbinding mislukt. Probeer het later.';
-                setTimeout(() => statusMessage.textContent = '', 5000);
             }
         }
 
-        // Poll elke 2 seconden voorupdates
+        // Poll elke 2 seconden voor updates
         setInterval(fetchMessages, 2000);
         fetchMessages();
 
