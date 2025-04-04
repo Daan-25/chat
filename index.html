@@ -5,7 +5,66 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Realtime Chat</title>
     <style>
-        /* Stijlen blijven ongewijzigd */
+        body {
+            margin: 0;
+            background-color: black;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        #chatContainer {
+            width: 80%;
+            margin: 20px auto;
+        }
+        #messages {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .message {
+            padding: 5px;
+            border-bottom: 1px solid #333;
+        }
+        .username {
+            font-weight: bold;
+            color: #0f0;
+        }
+        .timestamp {
+            font-size: 0.8em;
+            color: #888;
+        }
+        .ip {
+            font-size: 0.8em;
+            color: #f00;
+        }
+        input, button {
+            padding: 10px;
+            font-size: 16px;
+        }
+        #usernameInput {
+            width: 20%;
+            margin-right: 10px;
+        }
+        #messageInput {
+            width: 50%;
+            margin-right: 10px;
+        }
+        button {
+            cursor: pointer;
+        }
+        #statusMessage {
+            color: #f00;
+            margin-top: 10px;
+        }
+        #charCount {
+            font-size: 0.9em;
+            color: #888;
+            margin-right: 10px;
+        }
+        #charCount.warning {
+            color: #f00;
+        }
     </style>
 </head>
 <body>
