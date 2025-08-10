@@ -1,273 +1,545 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chattie Chat</title>
-    <style>
-        body {
-            margin: 0;
-            background: linear-gradient(135deg, #1a1a1a, #2b2b2b);
-            color: #f2f2f2;
-            font-family: 'Courier New', monospace;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        h1 {
-            font-size: 2.5em;
-            margin: 20px 0;
-            color: #f7931a;
-            text-shadow: 0 2px 6px rgba(247, 147, 26, 0.5);
-        }
-        #chatContainer {
-            width: 90%;
-            max-width: 800px;
-            background: #212121;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(247, 147, 26, 0.1);
-            padding: 20px;
-            margin: 0 auto 20px;
-            border: 1px solid #f7931a33;
-        }
-        #messages {
-            max-height: 500px;
-            overflow-y: auto;
-            margin-bottom: 20px;
-            padding: 15px;
-            background: #1a1a1a;
-            border-radius: 8px;
-            border: 1px solid #333;
-        }
-        .message {
-            padding: 12px;
-            border-bottom: 1px solid #3a3a3a;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            transition: background 0.2s;
-            position: relative;
-        }
-        .message:hover {
-            background: #252525;
-        }
-        .message::before {
-            content: '₿';
-            font-size: 0.8em;
-            color: #f7931a;
-            opacity: 0.3;
-            margin-right: 8px;
-        }
-        .avatar {
-            margin-right: 10px;
-            width: 24px;
-            height: 24px;
-            vertical-align: middle;
-        }
-        .username {
-            font-weight: bold;
-            color: #f7931a;
-            margin-right: 8px;
-        }
-        .timestamp {
-            font-size: 0.85em;
-            color: #888;
-            margin-left: 10px;
-        }
-        .ip {
-            font-size: 0.85em;
-            color: #ff6f61;
-            margin-left: 10px;
-        }
-        input, button, select {
-            padding: 12px;
-            font-size: 1em;
-            border: none;
-            border-radius: 8px;
-            outline: none;
-        }
-        #usernameInput {
-            width: 150px;
-            margin-right: 10px;
-            background: #2b2b2b;
-            color: #f2f2f2;
-            border: 1px solid #f7931a33;
-        }
-        #messageInput {
-            flex-grow: 1;
-            margin-right: 10px;
-            background: #2b2b2b;
-            color: #f2f2f2;
-            border: 1px solid #f7931a33;
-        }
-        #avatarSelect {
-            margin-right: 10px;
-            background: #2b2b2b;
-            color: #f2f2f2;
-            border: 1px solid #f7931a33;
-        }
-        button {
-            background: #f7931a;
-            color: #1a1a1a;
-            cursor: pointer;
-            transition: background 0.3s;
-            font-weight: bold;
-        }
-        button:hover {
-            background: #e07b10;
-        }
-        #statusMessage {
-            color: #ff6f61;
-            margin-top: 10px;
-            font-size: 0.9em;
-        }
-        #charCount {
-            font-size: 0.9em;
-            color: #888;
-            margin-right: 10px;
-        }
-        #charCount.warning {
-            color: #ff6f61;
-        }
-        .input-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chattie Chat</title>
+  <style>
+    :root {
+      --bg: #0f0f10;
+      --bg-accent: #141416;
+      --panel: rgba(28, 28, 30, 0.65);
+      --panel-border: #2a2a2d;
+      --input: #1f2023;
+      --text: #f4f4f5;
+      --muted: #a1a1aa;
+      --accent: #f7931a;
+      --accent-strong: #e07b10;
+      --danger: #ff6f61;
+      --success: #32d583;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 14px;
+      --radius-sm: 10px;
+    }
+
+    /* Licht thema */
+    [data-theme="light"] {
+      --bg: #f6f7f9;
+      --bg-accent: #ecedf1;
+      --panel: rgba(255, 255, 255, 0.8);
+      --panel-border: #e5e7eb;
+      --input: #ffffff;
+      --text: #0f172a;
+      --muted: #4b5563;
+      --shadow: 0 8px 28px rgba(15, 23, 42, 0.12);
+    }
+
+    /* Basis layout */
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background:
+        radial-gradient(1200px 500px at 10% -10%, #f7931a15, transparent 60%),
+        radial-gradient(900px 400px at 110% 10%, #7c3aed22, transparent 55%),
+        linear-gradient(135deg, var(--bg), var(--bg-accent));
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 18px;
+    }
+
+    header, main, footer {
+      width: min(980px, 92vw);
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 0 6px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-logo {
+      width: 36px; height: 36px;
+      border-radius: 9px;
+      display: grid; place-items: center;
+      background: linear-gradient(145deg, #2a2a2e, #1b1c1f);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 6px 14px rgba(0,0,0,.35);
+      color: var(--accent);
+      font-weight: 800;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(1.4rem, 2.4vw, 2rem);
+      letter-spacing: 0.2px;
+      background: linear-gradient(90deg, var(--text) 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 0 transparent;
+    }
+    .subtle {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .toolbar {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .btn {
+      border: 1px solid var(--panel-border);
+      background: var(--panel);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: inline-flex; align-items: center; gap: 8px;
+      transition: transform .06s ease, background .2s ease, border-color .2s ease;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset;
+    }
+    .btn:hover { transform: translateY(-1px); border-color: #ffffff22; }
+    .btn:active { transform: translateY(0); }
+    .btn-primary {
+      background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+      border-color: transparent;
+      color: #121212;
+      font-weight: 700;
+    }
+    .btn-ghost {
+      background: transparent;
+      border-color: #ffffff1a;
+    }
+
+    /* Chat container */
+    #chatContainer {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,.05);
+      padding: 14px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 12px;
+      min-height: min(70vh, 760px);
+    }
+
+    /* Messages area */
+    #messages {
+      overflow: auto;
+      padding: 12px;
+      border-radius: var(--radius);
+      background: color-mix(in oklab, var(--input) 94%, black 6%);
+      border: 1px solid var(--panel-border);
+      display: grid;
+      gap: 10px;
+      scroll-behavior: smooth;
+    }
+    /* Nette scrollbar */
+    #messages::-webkit-scrollbar { width: 10px; }
+    #messages::-webkit-scrollbar-thumb {
+      background: #ffffff22;
+      border-radius: 10px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+    }
+
+    /* Message bubble */
+    .message {
+      display: grid;
+      grid-template-columns: 36px 1fr;
+      gap: 10px;
+      align-items: start;
+      opacity: 0;
+      transform: translateY(4px);
+      animation: in .25s ease forwards;
+    }
+    @keyframes in { to { opacity: 1; transform: translateY(0); } }
+
+    .avatar {
+      width: 36px; height: 36px;
+      display: grid; place-items: center;
+      background: linear-gradient(145deg, #2a2a2e, #1b1c1f);
+      border: 1px solid var(--panel-border);
+      border-radius: 50%;
+      overflow: hidden;
+      font-size: 18px;
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    .bubble {
+      background: linear-gradient(180deg, color-mix(in oklab, var(--input) 95%, black 5%), color-mix(in oklab, var(--input) 90%, black 10%));
+      border: 1px solid var(--panel-border);
+      border-radius: 14px;
+      padding: 10px 12px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+      position: relative;
+    }
+
+    .message.mine { grid-template-columns: 1fr 36px; }
+    .message.mine .avatar { order: 2; }
+    .message.mine .bubble {
+      background: linear-gradient(180deg, #1e1f23, #1a1b1e);
+      border-color: #ffffff1a;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 0 0 1px #ffffff08;
+    }
+    [data-theme="light"] .message.mine .bubble {
+      background: linear-gradient(180deg, #f5f7fb, #eef1f7);
+      border-color: #dfe3ea;
+    }
+
+    .meta {
+      display: flex; flex-wrap: wrap; align-items: center;
+      gap: 8px 10px; margin-bottom: 6px;
+      font-size: 0.9rem;
+    }
+    .username {
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: .2px;
+    }
+    .badge {
+      font-size: 0.78rem;
+      color: var(--muted);
+      background: #ffffff12;
+      border: 1px solid var(--panel-border);
+      padding: 3px 8px;
+      border-radius: 999px;
+    }
+    .ip.badge { color: #ffb4ac; }
+
+    .text {
+      line-height: 1.5;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+    }
+
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 24px 10px;
+      border: 1px dashed var(--panel-border);
+      border-radius: 12px;
+      background: #ffffff06;
+    }
+
+    /* Input bar */
+    .input-bar {
+      display: grid;
+      grid-template-columns: minmax(110px, 160px) 100px 1fr auto auto auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    input, select {
+      padding: 12px 12px;
+      font-size: 1rem;
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius-sm);
+      outline: none;
+      background: var(--input);
+      color: var(--text);
+      transition: border-color .18s ease, box-shadow .18s ease;
+    }
+    input:focus, select:focus {
+      border-color: color-mix(in oklab, var(--accent) 60%, white 40%);
+      box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 25%, transparent);
+    }
+
+    #charCount {
+      font-size: 0.9rem;
+      color: var(--muted);
+      justify-self: end;
+      min-width: 90px;
+      text-align: right;
+    }
+    #charCount.warning { color: var(--danger); font-weight: 600; }
+
+    #statusMessage {
+      color: var(--danger);
+      min-height: 1.2em;
+      font-size: 0.95rem;
+      padding-left: 2px;
+    }
+
+    /* Responsief */
+    @media (max-width: 720px) {
+      .input-bar {
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas:
+          "name avatar"
+          "message message"
+          "count send home";
+        gap: 8px;
+      }
+      #usernameInput { grid-area: name; }
+      #avatarSelect { grid-area: avatar; }
+      #messageInput { grid-area: message; }
+      #charCount { grid-area: count; justify-self: start; }
+      #sendButton { grid-area: send; }
+      .home-btn { grid-area: home; }
+    }
+
+    /* Reduced motion respect */
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+      #messages { scroll-behavior: auto; }
+    }
+  </style>
 </head>
-<body>
-    <h1>Chattie Chat</h1>
-    <div id="chatContainer">
-        <div id="messages"></div>
-        <div class="input-container">
-            <input type="text" id="usernameInput" placeholder="Jouw naam" maxlength="10">
-            <select id="avatarSelect">
-                <option value="/bitcoin.ico">Bitcoin logo</option>
-                <option value="😀">😀</option>
-                <option value="🚀">🚀</option>
-                <option value="🐱">🐱</option>
-                <option value="💰">💰</option>
-                <option value="🦁">🦁</option>
-            </select>
-            <input type="text" id="messageInput" placeholder="Type je bericht..." maxlength="100">
-            <span id="charCount">0/100</span>
-            <button id="sendButton">Send</button>
-            <button onclick="window.location.href='https://daan.engineer'">
-    Home
-  </button>
-        </div>
-        <div id="statusMessage"></div>
+<body data-theme="dark">
+  <header>
+    <div class="brand">
+      <div class="brand-logo">₿</div>
+      <div>
+        <h1>Chattie Chat</h1>
+        <div class="subtle">Kleine praatjes. Echte vibes.</div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <button id="themeToggle" class="btn btn-ghost" aria-label="Wissel thema">🌓 Thema</button>
+      <button class="btn" onclick="location.href='https://daan.engineer'">Home</button>
+    </div>
+  </header>
+
+  <main id="chatContainer">
+    <div id="messages" aria-live="polite" aria-busy="true">
+      <div class="empty">Berichten laden…</div>
     </div>
 
-    <script>
-        const backendUrl = 'https://backchat-silk.vercel.app/api/messages';
-        const statusMessage = document.getElementById('statusMessage');
-        const messageInput = document.getElementById('messageInput');
-        const charCount = document.getElementById('charCount');
-        const messagesContainer = document.getElementById('messages');
-        const MAX_MESSAGE_LENGTH = 100;
-        const MAX_USERNAME_LENGTH = 10;
+    <div class="input-bar">
+      <input type="text" id="usernameInput" placeholder="Jouw naam" maxlength="10" autocomplete="nickname" />
+      <select id="avatarSelect" title="Kies avatar">
+        <option value="/bitcoin.ico">Bitcoin logo</option>
+        <option value="😀">😀</option>
+        <option value="🚀">🚀</option>
+        <option value="🐱">🐱</option>
+        <option value="💰">💰</option>
+        <option value="🦁">🦁</option>
+      </select>
 
-        // Update tekenteller
-        messageInput.addEventListener('input', () => {
-            const length = messageInput.value.length;
-            charCount.textContent = `${length}/${MAX_MESSAGE_LENGTH}`;
-            charCount.classList.toggle('warning', length > MAX_MESSAGE_LENGTH);
+      <input type="text" id="messageInput" placeholder="Type je bericht..." maxlength="100" />
+      <span id="charCount">0/100</span>
+      <button id="sendButton" class="btn btn-primary" disabled>Send</button>
+      <button class="btn home-btn" onclick="location.href='https://daan.engineer'">Home</button>
+    </div>
+
+    <div id="statusMessage" role="status" aria-live="polite"></div>
+  </main>
+
+  <footer class="subtle" style="padding: 6px 0 18px; text-align:center;">
+    Gemaakt met een vleugje oranje.
+  </footer>
+
+  <script>
+    const backendUrl = 'https://backchat-silk.vercel.app/api/messages';
+
+    // Elements
+    const statusMessage = document.getElementById('statusMessage');
+    const messagesContainer = document.getElementById('messages');
+    const usernameInput = document.getElementById('usernameInput');
+    const avatarSelect = document.getElementById('avatarSelect');
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+    const charCount = document.getElementById('charCount');
+    const themeToggle = document.getElementById('themeToggle');
+    const body = document.body;
+
+    const MAX_MESSAGE_LENGTH = 100;
+    const MAX_USERNAME_LENGTH = 10;
+
+    // Persist user prefs
+    const savedTheme = localStorage.getItem('chattie:theme');
+    if (savedTheme) body.setAttribute('data-theme', savedTheme);
+    const savedName = localStorage.getItem('chattie:name');
+    const savedAvatar = localStorage.getItem('chattie:avatar');
+    if (savedName) usernameInput.value = savedName;
+    if (savedAvatar) avatarSelect.value = savedAvatar;
+
+    themeToggle.addEventListener('click', () => {
+      const next = body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      body.setAttribute('data-theme', next);
+      localStorage.setItem('chattie:theme', next);
+    });
+    usernameInput.addEventListener('input', () => {
+      if (usernameInput.value.length <= MAX_USERNAME_LENGTH) {
+        localStorage.setItem('chattie:name', usernameInput.value);
+      }
+      // herteken om bubbels van "mij" te markeren
+      if (latestMessages) displayMessages(latestMessages);
+    });
+    avatarSelect.addEventListener('change', () => {
+      localStorage.setItem('chattie:avatar', avatarSelect.value);
+    });
+
+    // Tekenteller + send state
+    function updateCharCount() {
+      const length = messageInput.value.length;
+      charCount.textContent = `${length}/${MAX_MESSAGE_LENGTH}`;
+      const remaining = MAX_MESSAGE_LENGTH - length;
+      charCount.classList.toggle('warning', remaining <= 10 || remaining < 0);
+      sendButton.disabled = length === 0 || length > MAX_MESSAGE_LENGTH;
+    }
+    messageInput.addEventListener('input', updateCharCount);
+    updateCharCount();
+
+    // Format helpers
+    function formatTime(ts) {
+      try {
+        return new Date(ts).toLocaleString('nl-NL', {
+          hour: '2-digit',
+          minute: '2-digit',
+          day: '2-digit',
+          month: '2-digit',
+          year: '2-digit'
         });
+      } catch {
+        return '';
+      }
+    }
 
-        // Functie om berichten te tonen
-        function displayMessages(messages) {
-            const isNearBottom = messagesContainer.scrollTop + messagesContainer.clientHeight >= messagesContainer.scrollHeight - 100;
-            messagesContainer.innerHTML = '';
-            messages.forEach(msg => {
-                const messageElement = document.createElement('div');
-                messageElement.className = 'message';
-                const avatarHtml = msg.avatar.startsWith('/') || msg.avatar.startsWith('http')
-                    ? `<img src="${msg.avatar}" alt="Avatar" class="avatar">`
-                    : `<span class="avatar">${msg.avatar || '😀'}</span>`;
-                messageElement.innerHTML = `
-                    ${avatarHtml}
-                    <span class="username">${msg.username}</span>: ${msg.text}
-                    <span class="timestamp">(${new Date(msg.timestamp).toLocaleString()})</span>
-                    <span class="ip">[IP: ${msg.ip}]</span>
-                `;
-                messagesContainer.appendChild(messageElement);
-            });
-            if (isNearBottom) {
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            }
-        }
+    // Render messages
+    let latestMessages = null;
 
-        // Haal berichten op
-        async function fetchMessages() {
-            try {
-                const response = await fetch(backendUrl);
-                if (!response.ok) throw new Error('Netwerkfout');
-                const messages = await response.json();
-                displayMessages(messages);
-            } catch (error) {
-                console.error('Fout bij ophalen:', error);
-                statusMessage.textContent = 'Kan berichten niet laden.';
-            }
-        }
+    function displayMessages(messages) {
+      latestMessages = messages;
+      const isNearBottom = messagesContainer.scrollTop + messagesContainer.clientHeight >= messagesContainer.scrollHeight - 100;
 
-        // Verstuur een bericht
-        async function sendMessage() {
-            const usernameInput = document.getElementById('usernameInput');
-            const avatarSelect = document.getElementById('avatarSelect');
-            const text = messageInput.value;
-            const username = usernameInput.value;
-            const avatar = avatarSelect.value;
+      if (!messages || messages.length === 0) {
+        messagesContainer.innerHTML = '<div class="empty">Nog geen berichten. Zeg eens hallo 👋</div>';
+        return;
+      }
 
-            if (!text) {
-                statusMessage.textContent = 'Geen tekst opgegeven';
-                setTimeout(() => statusMessage.textContent = '', 5000);
-                return;
-            }
-            if (text.length > MAX_MESSAGE_LENGTH) {
-                statusMessage.textContent = `Bericht te lang (max ${MAX_MESSAGE_LENGTH} tekens)`;
-                setTimeout(() => statusMessage.textContent = '', 5000);
-                return;
-            }
-            if (username.length > MAX_USERNAME_LENGTH) {
-                statusMessage.textContent = `Naam te lang (max ${MAX_USERNAME_LENGTH} tekens)`;
-                setTimeout(() => statusMessage.textContent = '', 5000);
-                return;
-            }
+      messagesContainer.innerHTML = '';
+      const me = (usernameInput.value || '').trim();
 
-            try {
-                const response = await fetch(backendUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text, username, avatar }),
-                });
-                const result = await response.json();
-                if (!response.ok) {
-                    statusMessage.textContent = result.error;
-                    setTimeout(() => statusMessage.textContent = '', 5000);
-                    return;
-                }
-                messageInput.value = '';
-                charCount.textContent = `0/${MAX_MESSAGE_LENGTH}`;
-                fetchMessages();
-                statusMessage.textContent = '';
-            } catch (error) {
-                console.error('Fout bij verzenden:', error);
-                statusMessage.textContent = 'Verbinding mislukt. Probeer het later.';
-            }
-        }
+      messages.forEach(msg => {
+        const isImage = typeof msg.avatar === 'string' && (msg.avatar.startsWith('/') || msg.avatar.startsWith('http'));
+        const isMine = me && msg.username === me;
 
-        // Poll elke 2 seconden voor updates
-        setInterval(fetchMessages, 5000);
-        fetchMessages();
+        const wrapper = document.createElement('div');
+        wrapper.className = `message ${isMine ? 'mine' : ''}`;
 
-        // Koppel de verzendknop
-        document.getElementById('sendButton').addEventListener('click', sendMessage);
-        document.getElementById('messageInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMessage();
+        const avatar = document.createElement('div');
+        avatar.className = 'avatar';
+        avatar.innerHTML = isImage
+          ? `<img src="${msg.avatar}" alt="Avatar">`
+          : `<span>${msg.avatar || '😀'}</span>`;
+
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        meta.innerHTML = `
+          <span class="username">${msg.username || 'Anoniem'}</span>
+          <span class="badge">${formatTime(msg.timestamp)}</span>
+          <span class="badge ip" title="Publiek IP">IP: ${msg.ip}</span>
+        `;
+
+        const text = document.createElement('div');
+        text.className = 'text';
+        text.textContent = msg.text;
+
+        bubble.appendChild(meta);
+        bubble.appendChild(text);
+
+        wrapper.appendChild(avatar);
+        wrapper.appendChild(bubble);
+
+        messagesContainer.appendChild(wrapper);
+      });
+
+      if (isNearBottom) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+      messagesContainer.setAttribute('aria-busy', 'false');
+    }
+
+    // Fetch messages
+    async function fetchMessages() {
+      try {
+        const response = await fetch(backendUrl, { cache: 'no-store' });
+        if (!response.ok) throw new Error('Netwerkfout');
+        const messages = await response.json();
+        displayMessages(messages);
+        statusMessage.textContent = '';
+      } catch (error) {
+        console.error('Fout bij ophalen:', error);
+        statusMessage.textContent = 'Kan berichten niet laden.';
+      }
+    }
+
+    // Send message
+    async function sendMessage() {
+      const text = messageInput.value;
+      const username = usernameInput.value.trim();
+      const avatar = avatarSelect.value;
+
+      if (!text) {
+        statusMessage.textContent = 'Geen tekst opgegeven';
+        setTimeout(() => (statusMessage.textContent = ''), 4000);
+        return;
+      }
+      if (text.length > MAX_MESSAGE_LENGTH) {
+        statusMessage.textContent = `Bericht te lang (max ${MAX_MESSAGE_LENGTH} tekens)`;
+        setTimeout(() => (statusMessage.textContent = ''), 4000);
+        return;
+      }
+      if (username.length > MAX_USERNAME_LENGTH) {
+        statusMessage.textContent = `Naam te lang (max ${MAX_USERNAME_LENGTH} tekens)`;
+        setTimeout(() => (statusMessage.textContent = ''), 4000);
+        return;
+      }
+
+      sendButton.disabled = true;
+
+      try {
+        const response = await fetch(backendUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, username, avatar }),
         });
-    </script>
+        const result = await response.json();
+        if (!response.ok) {
+          statusMessage.textContent = result.error || 'Er ging iets mis.';
+          setTimeout(() => (statusMessage.textContent = ''), 5000);
+          return;
+        }
+        messageInput.value = '';
+        updateCharCount();
+        await fetchMessages();
+        statusMessage.textContent = '';
+      } catch (error) {
+        console.error('Fout bij verzenden:', error);
+        statusMessage.textContent = 'Verbinding mislukt. Probeer het later.';
+      } finally {
+        sendButton.disabled = false;
+        messageInput.focus();
+      }
+    }
+
+    // Events
+    sendButton.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    // Poll elke 3 seconden
+    fetchMessages();
+    const poller = setInterval(fetchMessages, 3000);
+    window.addEventListener('beforeunload', () => clearInterval(poller));
+  </script>
 </body>
 </html>
